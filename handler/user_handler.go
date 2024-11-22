@@ -93,7 +93,7 @@ func(h *UserHandler)Login(w http.ResponseWriter, r *http.Request){
         Data: map[string]string{
             "token": token,
             "username": validate.Username,
-            "user_id": validate.ID,
+            "user_id": validate.ID.String(),
         },
         Err: nil,
     }

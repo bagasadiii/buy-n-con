@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS items (
     name VARCHAR(50) NOT NULL,
     quantity INT NOT NULL,
     price INT NOT NULL,
+    belongs_to VARCHAR(30) NOT NULL,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     user_id UUID,
