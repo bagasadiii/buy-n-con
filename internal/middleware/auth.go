@@ -6,14 +6,15 @@ import (
 	"strings"
 
 	"github.com/bagasadiii/buy-n-con/helper"
+	"github.com/google/uuid"
 )
 
-type contextKey string
-
-var (
-	UserIDKey = contextKey("user_id")
-	UsernameKey = contextKey("username")
-)
+type ContextKey struct {
+	UserIDKey uuid.UUID
+	UsernameKey string
+}
+type ctxKey string
+const UserContextKey = ctxKey("context_key")
 
 func Auth(next http.HandlerFunc)http.HandlerFunc{
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -50,9 +51,10 @@ func Auth(next http.HandlerFunc)http.HandlerFunc{
 			helper.JSONResponse(w, res.Status, res)
 			return
 		}
-		ctx := r.Context()
-		ctx = context.WithValue(ctx, UserIDKey, validation.ID)
-		ctx = context.WithValue(ctx, UsernameKey, validation.Username)
+		ctx := context.WithValue(r.Context(), UserContextKey, &ContextKey{
+			UserIDKey: validation.ID,
+			UsernameKey: validation.Username,
+		})
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

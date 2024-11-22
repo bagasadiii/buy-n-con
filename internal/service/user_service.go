@@ -43,7 +43,7 @@ func(s *UserService)LoginService(ctx context.Context, new *model.LoginInput)(str
 		helper.ErrMsg(err, "invalid password: ")
 		return "", err
 	}
-	token, err := middleware.GenerateToken(user.UserID.String(), new.Username)
+	token, err := middleware.GenerateToken(user.UserID, new.Username)
 	if err != nil {
 		helper.ErrMsg(err, "failed to create token: ")
 		return "", err

@@ -7,22 +7,23 @@ import (
 
 	"github.com/bagasadiii/buy-n-con/helper"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 )
 
 var secretKey = []byte(os.Getenv("SECRET_KEY"))
 
 type Claims struct {
-	ID       string
+	ID       uuid.UUID
 	Username string
 	jwt.RegisteredClaims
 }
 type UserValidation struct {
 	Token		string
-	ID			string
+	ID			uuid.UUID
 	Username 	string
 	Err 		interface{}
 }
-func GenerateToken(id, username string) (string, error) {
+func GenerateToken(id uuid.UUID, username string) (string, error) {
 	exp := time.Now().Add(24 * time.Hour)
 	newClaims := &Claims {
 		ID: id,
