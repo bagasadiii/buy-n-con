@@ -18,3 +18,27 @@ func JSONResponse(w http.ResponseWriter, status int, data interface{}){
 	w.WriteHeader(status)
 	json.NewEncoder(w).Encode(data)
 }
+func UnauthorizedErr(msg string, err error)*Response{
+	return &Response{
+		Status: http.StatusUnauthorized,
+		Message: msg,
+		Data: nil,
+		Err: err,
+	}
+}
+func BadRequestErr(msg string, err error)*Response{
+	return &Response{
+		Status: http.StatusBadRequest,
+		Message: msg,
+		Data: nil,
+		Err: err,
+	}
+}
+func InternalErr(msg string, err error)*Response{
+	return &Response{
+		Status: http.StatusInternalServerError,
+		Message: msg,
+		Data: nil,
+		Err: err,
+	}
+}

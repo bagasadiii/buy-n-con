@@ -24,23 +24,13 @@ func(h *ItemHandler)CreateItem(w http.ResponseWriter, r *http.Request){
 
 	var input model.CreateItemInput
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		res := helper.Response{
-			Status: http.StatusBadRequest,
-			Message: "bad request",
-			Data: nil,
-			Err: err,
-		}
+		res := helper.BadRequestErr("Bad request", err)
 		helper.JSONResponse(w, res.Status, res)
 		return
 	}
 	item, err := h.serv.CreateItemService(ctx, &input)
 	if err != nil {
-		res := helper.Response{
-			Status: http.StatusInternalServerError,
-			Message: "failed",
-			Data: item,
-			Err: err,
-		}
+		res := helper.InternalErr("Failed to create user", err)
 		helper.JSONResponse(w, res.Status, res)
 		return
 	}

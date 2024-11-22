@@ -21,7 +21,7 @@ type UserValidation struct {
 	Token		string
 	ID			uuid.UUID
 	Username 	string
-	Err 		interface{}
+	Err 		error
 }
 func GenerateToken(id uuid.UUID, username string) (string, error) {
 	exp := time.Now().Add(24 * time.Hour)

@@ -20,27 +20,18 @@ type UserHandler struct {
 func NewUserHandler(serv service.UserServiceImpl)UserHandlerImpl{
 	return &UserHandler{serv:serv}
 }
+
 func(h *UserHandler)Register(w http.ResponseWriter, r *http.Request){
 	var input model.RegisterInput
 	err := json.NewDecoder(r.Body).Decode(&input)
 	if err != nil {
-		res := helper.Response{
-			Status: http.StatusBadRequest,
-			Message: "bad request",
-			Data: input,
-			Err: err.Error(),
-		}
+		res := helper.BadRequestErr("Bad request", err)
 		helper.JSONResponse(w, res.Status, res)
 		return
 	}
 	user, err := h.serv.RegisterService(r.Context(), &input)
 	if err != nil {
-		res := helper.Response{
-			Status: http.StatusInternalServerError,
-			Message: "unexpected error",
-			Data: user,
-			Err: err.Error(),
-		}
+		res := helper.InternalErr("Internal server error while register", err)
 		helper.JSONResponse(w, res.Status, res)
 		return
 	}
@@ -52,38 +43,24 @@ func(h *UserHandler)Register(w http.ResponseWriter, r *http.Request){
 	}
 	helper.JSONResponse(w, res.Status, res)
 }
+
 func(h *UserHandler)Login(w http.ResponseWriter, r *http.Request){
 	var input model.LoginInput
 	err := json.NewDecoder(r.Body).Decode(&input)
 	if err != nil {
-		res := helper.Response{
-			Status: http.StatusBadRequest,
-			Message: "bad request",
-			Data: nil,
-			Err: err.Error(),
-		}
+		res := helper.BadRequestErr("Bad request", err)
 		helper.JSONResponse(w, res.Status, res)
 		return
 	}
 	token, err := h.serv.LoginService(r.Context(), &input)
 	if err != nil {
-		res := helper.Response{
-			Status: http.StatusBadRequest,
-			Message: "failed to login",
-			Data: nil,
-			Err: err.Error(),
-		}
+		res := helper.BadRequestErr("Invalid Login", err)
 		helper.JSONResponse(w, res.Status, res)
 		return
 	}
 	validate := middleware.ValidateToken(token)
 	if validate.Err != nil {
-		res := helper.Response{
-			Status: http.StatusBadRequest,
-			Message: "bad request",
-			Data: &validate,
-			Err: validate.Err,
-		}
+		res := helper.InternalErr("Validation token error", validate.Err)
 		helper.JSONResponse(w, res.Status, res)
 		return
 	}
