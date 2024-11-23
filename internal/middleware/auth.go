@@ -7,6 +7,7 @@ import (
 
 	"github.com/bagasadiii/buy-n-con/helper"
 	"github.com/google/uuid"
+	router "github.com/julienschmidt/httprouter"
 )
 
 type ContextKey struct {
@@ -16,8 +17,8 @@ type ContextKey struct {
 type ctxKey string
 const UserContextKey = ctxKey("context_key")
 
-func Auth(next http.HandlerFunc)http.HandlerFunc{
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+func Auth(next router.Handle)router.Handle{
+	return func(w http.ResponseWriter, r *http.Request, p router.Params) {
 		authHeader := r.Header.Get("Authorization")
 		if authHeader == "" {
 			res := helper.Response{
@@ -55,6 +56,6 @@ func Auth(next http.HandlerFunc)http.HandlerFunc{
 			UserIDKey: validation.ID,
 			UsernameKey: validation.Username,
 		})
-		next.ServeHTTP(w, r.WithContext(ctx))
-	})
+		next(w, r.WithContext(ctx), p)
+	}
 }

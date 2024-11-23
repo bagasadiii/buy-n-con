@@ -13,6 +13,7 @@ import (
 type UserRepoImpl interface {
 	RegisterRepo(ctx context.Context,user *model.User)error
 	LoginRepo(ctx context.Context, input *model.LoginInput)(*model.User, error)
+	GetUserRepo(ctx context.Context, username string)(*model.UserResponse, error)
 }
 type UserRepository struct {
 	db *pgxpool.Pool
@@ -55,8 +56,32 @@ func(r *UserRepository)LoginRepo(ctx context.Context, input *model.LoginInput)(*
 		if err == pgx.ErrNoRows{
 			return nil, errors.New("no data found")
 		}
-		return nil, helper.ErrMsg(err, "failed to find data: ")
+		helper.ErrMsg(err, "failed to find data: ")
+		return nil, err
 	}
 	helper.SuccessMsg("login successful")
+	return &user, nil
+}
+func(r *UserRepository)GetUserRepo(ctx context.Context, username string)(*model.UserResponse, error){
+	query := `
+		SELECT user_id, username, email, created_at, updated_at
+		FROM users
+		WHERE username = $1
+	`
+	var user model.UserResponse
+	err := r.db.QueryRow(ctx, query, username).Scan(
+		&user.UserID,
+		&user.Username,
+		&user.Email,
+		&user.CreatedAt,
+		&user.UpdatedAt,
+	)
+	if err != nil {
+		if err == pgx.ErrNoRows{
+			return nil, errors.New("no data found")
+		}
+		helper.ErrMsg(err, "failed to find data: ")
+		return nil, err
+	}
 	return &user, nil
 }

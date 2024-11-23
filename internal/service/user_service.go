@@ -13,6 +13,7 @@ import (
 type UserServiceImpl interface {
 	RegisterService(ctx context.Context, new *model.RegisterInput)(*model.User, error)
 	LoginService(ctx context.Context, new *model.LoginInput)(string, error)
+	GetUserService(ctx context.Context, username string)(*model.UserResponse, error)
 }
 type UserService struct {
 	repo repository.UserRepoImpl
@@ -49,4 +50,12 @@ func(s *UserService)LoginService(ctx context.Context, new *model.LoginInput)(str
 		return "", err
 	}
 	return token, nil
+}
+func(s *UserService)GetUserService(ctx context.Context, username string)(*model.UserResponse, error){
+	user, err := s.repo.GetUserRepo(ctx, username)
+	if err != nil {
+		helper.ErrMsg(err, "failed to get user: ")
+		return nil, err
+	}
+	return user, nil
 }

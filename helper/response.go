@@ -19,6 +19,7 @@ func JSONResponse(w http.ResponseWriter, status int, data interface{}){
 	json.NewEncoder(w).Encode(data)
 }
 func UnauthorizedErr(msg string, err error)*Response{
+	ErrMsg(err, msg)
 	return &Response{
 		Status: http.StatusUnauthorized,
 		Message: msg,
@@ -27,6 +28,7 @@ func UnauthorizedErr(msg string, err error)*Response{
 	}
 }
 func BadRequestErr(msg string, err error)*Response{
+	ErrMsg(err, msg)
 	return &Response{
 		Status: http.StatusBadRequest,
 		Message: msg,
@@ -35,6 +37,7 @@ func BadRequestErr(msg string, err error)*Response{
 	}
 }
 func InternalErr(msg string, err error)*Response{
+	ErrMsg(err, msg)
 	return &Response{
 		Status: http.StatusInternalServerError,
 		Message: msg,
