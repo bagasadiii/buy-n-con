@@ -25,7 +25,13 @@ func(r *UserRepository)RegisterRepo(ctx context.Context,user *model.User)error{
 		INSERT INTO users (user_id, username, email, password, created_at, updated_at)
 		VALUES ($1, $2, $3, $4, $5, $6);
 	`
-	_, err := r.db.Exec(ctx, query, user.UserID, user.Username, user.Email, user.Password, user.CreatedAt, user.UpdatedAt)
+	_, err := r.db.Exec(ctx, query, user.UserID, 
+		user.Username, 
+		user.Email, 
+		user.Password, 
+		user.CreatedAt, 
+		user.UpdatedAt,
+	)
 	if err != nil {
 		return helper.ErrMsg(err, "failed to create user: ")
 	}
@@ -40,7 +46,11 @@ func(r *UserRepository)LoginRepo(ctx context.Context, input *model.LoginInput)(*
 		WHERE username = $1
 	`
 	var user model.User
-	err := r.db.QueryRow(ctx, query, input.Username).Scan(&user.UserID, &user.Password, &user.Email)
+	err := r.db.QueryRow(ctx, query, input.Username).Scan(
+		&user.UserID,
+		&user.Password,
+		&user.Email,
+	)
 	if err != nil {
 		if err == pgx.ErrNoRows{
 			return nil, errors.New("no data found")
