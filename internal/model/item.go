@@ -22,10 +22,30 @@ type Item struct {
 }
 type CreateItemInput struct {
 	ItemID   	uuid.UUID	`json:"item_id"`
-	Name      	string		`json:"name"`
-	Quantity  	int			`json:"quantity"`
-	Price     	int			`json:"price"`
+	Name      	string		`json:"name" validate:"required"`
+	Quantity  	int			`json:"quantity" validate:"required,gt=0"`
+	Price     	int			`json:"price" validate:"required,gt=0"`
 }
+type GetItemInput struct {
+	ItemID		uuid.UUID	`json:"item_id"`
+	BelongsTo	string		`json:"belongs_to"`
+}
+type UpdateItemInput struct {
+	Name      string    `json:"name" validate:"required,min=3"`
+	Quantity  int       `json:"quantity" validate:"required,gt=0"`
+	Price     int       `json:"price" validate:"required,gt=0"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
+type ItemResp struct {
+	ItemID    uuid.UUID `json:"item_id"`
+	BelongsTo string	`json:"belongs_to"`
+	Name      string    `json:"name"`
+	Quantity  int       `json:"quantity"`
+	Price     int       `json:"price"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
 func NewItem(ctx context.Context, input *CreateItemInput)(*Item, error){
 	ctxKey, ok := ctx.Value(middleware.UserContextKey).(*middleware.ContextKey)
 	if !ok {

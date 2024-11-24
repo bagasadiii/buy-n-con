@@ -4,9 +4,9 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/bagasadiii/buy-n-con/app"
 	"github.com/bagasadiii/buy-n-con/handler"
 	"github.com/bagasadiii/buy-n-con/internal/config"
-	"github.com/bagasadiii/buy-n-con/internal/middleware"
 	"github.com/bagasadiii/buy-n-con/internal/repository"
 	"github.com/bagasadiii/buy-n-con/internal/service"
 	"github.com/joho/godotenv"
@@ -26,10 +26,8 @@ func main() {
 	itemServ := service.NewItemService(itemRepo, db)
 	itemHand := handler.NewItemHandler(itemServ)
 
-	http.HandleFunc("/register", userHand.Register)
-	http.HandleFunc("/login", userHand.Login)
-	http.HandleFunc("/item", middleware.Auth(itemHand.CreateItem))
-	if err := http.ListenAndServe(":8080", nil); err != nil {
+	r := app.SetupRouter(itemHand, userHand)
+	if err := http.ListenAndServe(":8080", r); err != nil {
 		log.Fatal("failed to run server")
 	}
 	log.Println("server running")

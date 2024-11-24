@@ -45,3 +45,12 @@ func InternalErr(msg string, err error)*Response{
 		Err: err,
 	}
 }
+func ForbiddenErr(msg string, err error)*Response{
+	ErrMsg(err, msg)
+	return &Response{
+		Status: http.StatusForbidden,
+		Message: msg,
+		Data: nil,
+		Err: err,
+	}
+}

@@ -21,34 +21,19 @@ func Auth(next router.Handle)router.Handle{
 	return func(w http.ResponseWriter, r *http.Request, p router.Params) {
 		authHeader := r.Header.Get("Authorization")
 		if authHeader == "" {
-			res := helper.Response{
-				Status: http.StatusUnauthorized,
-				Message: "Missing auth header",
-				Data: nil,
-				Err: nil,
-			}
+			res := helper.UnauthorizedErr("Missing Header: ", nil)
 			helper.JSONResponse(w, res.Status, res)
 			return
 		}
 		token := strings.TrimPrefix(authHeader, "Bearer ")
 		if token == "" {
-			res := helper.Response{
-				Status:  http.StatusUnauthorized,
-				Message: "Invalid Authorization header format",
-				Data:    nil,
-				Err:     nil,
-			}
+			res := helper.UnauthorizedErr("Missing token: ", nil)
 			helper.JSONResponse(w, res.Status, res)
 			return
 		}
 		validation := ValidateToken(token)
 		if validation.Err != nil{
-			res := helper.Response{
-				Status: http.StatusUnauthorized,
-				Message: "Invalid or expired token",
-				Data: validation,
-				Err: validation.Err,
-			}
+			res := helper.UnauthorizedErr("Expired or invalid token ", validation.Err)
 			helper.JSONResponse(w, res.Status, res)
 			return
 		}
