@@ -36,7 +36,7 @@ func(h *UserHandler)Register(w http.ResponseWriter, r *http.Request, _ router.Pa
 		helper.JSONResponse(w, res.Status, res)
 		return
 	}
-	if err := h.valid.Struct(input); err != nil {
+	if err := h.valid.Struct(&input); err != nil {
 		res := helper.BadRequestErr("Fill required form", err)
 		helper.JSONResponse(w, res.Status, res)
 		return
@@ -64,7 +64,7 @@ func(h *UserHandler)Login(w http.ResponseWriter, r *http.Request, _ router.Param
 		helper.JSONResponse(w, res.Status, res)
 		return
 	}
-	if err := h.valid.Struct(input); err != nil {
+	if err := h.valid.Struct(&input); err != nil {
 		res := helper.BadRequestErr("Fill required form", err)
 		helper.JSONResponse(w, res.Status, res)
 		return

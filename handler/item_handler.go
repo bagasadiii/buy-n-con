@@ -9,6 +9,7 @@ import (
 	"github.com/bagasadiii/buy-n-con/internal/middleware"
 	"github.com/bagasadiii/buy-n-con/internal/model"
 	"github.com/bagasadiii/buy-n-con/internal/service"
+	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 	router "github.com/julienschmidt/httprouter"
 )
@@ -22,9 +23,13 @@ type ItemHandlerImpl interface{
 }
 type ItemHandler struct {
 	serv service.ItemServiceImpl
+	valid *validator.Validate
 }
 func NewItemHandler(serv service.ItemServiceImpl)ItemHandlerImpl{
-	return &ItemHandler{serv:serv}
+	return &ItemHandler{
+		serv:serv,
+		valid: validator.New(),
+	}
 }
 
 func(h *ItemHandler)CreateItem(w http.ResponseWriter, r *http.Request, p router.Params){
@@ -43,6 +48,11 @@ func(h *ItemHandler)CreateItem(w http.ResponseWriter, r *http.Request, p router.
 	}
 	var input model.CreateItemInput
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		res := helper.BadRequestErr("Bad request: validation failed", err)
+		helper.JSONResponse(w, res.Status, res)
+		return
+	}
+	if err := h.valid.Struct(&input); err != nil {
 		res := helper.BadRequestErr("Bad request", err)
 		helper.JSONResponse(w, res.Status, res)
 		return
@@ -75,7 +85,7 @@ func(h *ItemHandler)GetItemByID(w http.ResponseWriter, r *http.Request, p router
 	}
 	item, err := h.serv.GetItemByIDService(r.Context(), input)
 	if err != nil {
-		res := helper.InternalErr("Failed to create user", err)
+		res := helper.InternalErr("Failed to fetch item: ", err)
 		helper.JSONResponse(w, res.Status, res)
 		return
 	}
@@ -91,7 +101,7 @@ func(h *ItemHandler)GetAllItems(w http.ResponseWriter, r *http.Request, p router
 	username := p.ByName("username")
 	items, err := h.serv.GetAllItemsService(r.Context(), username)
 	if err != nil {
-		res := helper.BadRequestErr("Bad request: invalid URL", nil)
+		res := helper.BadRequestErr("Bad request: unable to fetch items", nil)
 		helper.JSONResponse(w, res.Status, res)
 		return
 	}
@@ -113,7 +123,7 @@ func(h *ItemHandler)UpdateItem(w http.ResponseWriter, r *http.Request, p router.
 	}
 	itemID, err := uuid.Parse(p.ByName("item_id"))
 	if err != nil {
-		res := helper.BadRequestErr("Invalid ID: ", err)
+		res := helper.BadRequestErr("Invalid ID: item ID parsing failed", err)
 		helper.JSONResponse(w, res.Status, res)
 		return
 	}
@@ -126,6 +136,11 @@ func(h *ItemHandler)UpdateItem(w http.ResponseWriter, r *http.Request, p router.
 	var input model.UpdateItemInput
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 		res := helper.BadRequestErr("Bad request: ", err)
+		helper.JSONResponse(w, res.Status, res)
+		return
+	}
+	if err := h.valid.Struct(&input); err != nil {
+		res := helper.BadRequestErr("Bad request: validation failed", err)
 		helper.JSONResponse(w, res.Status, res)
 		return
 	}
