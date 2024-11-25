@@ -139,11 +139,6 @@ func(h *ItemHandler)UpdateItem(w http.ResponseWriter, r *http.Request, p router.
 		helper.JSONResponse(w, res.Status, res)
 		return
 	}
-	if err := h.valid.Struct(&input); err != nil {
-		res := helper.BadRequestErr("Bad request: validation failed", err)
-		helper.JSONResponse(w, res.Status, res)
-		return
-	}
 	getItem := model.GetItemInput{
 		ItemID: itemID,
 		BelongsTo: username,

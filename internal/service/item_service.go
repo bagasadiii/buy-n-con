@@ -99,6 +99,7 @@ func(s *ItemService)UpdateItemService(ctx context.Context, new *model.UpdateItem
 		Name: new.Name,
 		Quantity: new.Quantity,
 		Price: new.Price,
+		Description: new.Description,
 		UpdatedAt: time.Now(),
 	}
 	id := getItem.ItemID

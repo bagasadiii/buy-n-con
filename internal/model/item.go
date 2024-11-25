@@ -12,20 +12,22 @@ import (
 )
 
 type Item struct {
-	ItemID    uuid.UUID `json:"item_id"`
-	UserID    uuid.UUID `json:"user_id"`
-	BelongsTo string	`json:"belongs_to"`
-	Name      string    `json:"name"`
-	Quantity  int       `json:"quantity"`
-	Price     int       `json:"price"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	ItemID    	uuid.UUID `json:"item_id"`
+	UserID    	uuid.UUID `json:"user_id"`
+	BelongsTo 	string	`json:"belongs_to"`
+	Name      	string    `json:"name"`
+	Quantity  	int       `json:"quantity"`
+	Price     	int       `json:"price"`
+	Description	string		`json:"description"`
+	CreatedAt 	time.Time `json:"created_at"`
+	UpdatedAt 	time.Time `json:"updated_at"`
 }
 type CreateItemInput struct {
 	ItemID   	uuid.UUID	`json:"item_id"`
 	Name      	string		`json:"name" validate:"required"`
 	Quantity  	int			`json:"quantity" validate:"required,gt=0"`
 	Price     	int			`json:"price" validate:"required,gt=0"`
+	Description	string		`json:"description"`
 }
 type GetItemInput struct {
 	ItemID		uuid.UUID	`json:"item_id"`
@@ -36,6 +38,8 @@ type UpdateItemInput struct {
 	Quantity  int       `json:"quantity" validate:"required,gt=0"`
 	Price     int       `json:"price" validate:"required,gt=0"`
 	UpdatedAt time.Time `json:"updated_at"`
+	Description	string	`json:"description"`
+
 }
 type ItemResp struct {
 	ItemID    uuid.UUID `json:"item_id"`
@@ -43,6 +47,7 @@ type ItemResp struct {
 	Name      string    `json:"name"`
 	Quantity  int       `json:"quantity"`
 	Price     int       `json:"price"`
+	Description	string		`json:"description"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }
@@ -65,6 +70,7 @@ func NewItem(ctx context.Context, input *CreateItemInput)(*Item, error){
 		Name: name,
 		Quantity: input.Quantity,
 		Price: input.Price,
+		Description: input.Description,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}, nil

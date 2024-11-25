@@ -25,12 +25,19 @@ func NewItemRepository() ItemRepoImpl {
 
 func(r *ItemRepo)CreateItemRepo(ctx context.Context, tx pgx.Tx, item *model.Item)error{
 	query := `
-		INSERT INTO items (item_id, user_id, belongs_to, name, quantity, price, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+		INSERT INTO items (item_id, user_id, belongs_to, name, quantity, price, description, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 	`
-	_, err := tx.Exec(
-		ctx, query, item.ItemID, item.UserID, item.BelongsTo,
-		item.Name,item.Quantity,item.Price, item.CreatedAt,item.UpdatedAt,
+	_, err := tx.Exec(ctx, query, 
+		item.ItemID, 
+		item.UserID, 
+		item.BelongsTo,
+		item.Name,
+		item.Quantity,
+		item.Price,
+		item.Description,
+		item.CreatedAt,
+		item.UpdatedAt,
 	)
 	if err != nil {
 		helper.ErrMsg(err, "failed to create item: ")
@@ -41,7 +48,7 @@ func(r *ItemRepo)CreateItemRepo(ctx context.Context, tx pgx.Tx, item *model.Item
 }
 func(r *ItemRepo)GetItemByIDRepo(ctx context.Context, tx pgx.Tx, input *model.GetItemInput)(*model.ItemResp, error){
 	query := `
-		SELECT item_id, belongs_to, name, quantity, price, created_at, updated_at
+		SELECT item_id, belongs_to, name, quantity, price, description, created_at, updated_at
 		FROM items
 		WHERE item_id = $1 AND belongs_to = $2
 	`
@@ -53,6 +60,7 @@ func(r *ItemRepo)GetItemByIDRepo(ctx context.Context, tx pgx.Tx, input *model.Ge
 		&item.Name, 
 		&item.Quantity,
 		&item.Price,
+		&item.Description,
 		&item.CreatedAt,
 		&item.UpdatedAt,
 	)
@@ -67,7 +75,7 @@ func(r *ItemRepo)GetItemByIDRepo(ctx context.Context, tx pgx.Tx, input *model.Ge
 }
 func(r *ItemRepo)GetAllItemsRepo(ctx context.Context, tx pgx.Tx, username string)([]model.ItemResp, error){
 	query := `
-		SELECT item_id, belongs_to, name, quantity, price, created_at, updated_at
+		SELECT item_id, belongs_to, name, quantity, price, description, created_at, updated_at
 		FROM items
 		WHERE belongs_to = $1
 	`
@@ -90,6 +98,7 @@ func(r *ItemRepo)GetAllItemsRepo(ctx context.Context, tx pgx.Tx, username string
 			&item.Name, 
 			&item.Quantity,
 			&item.Price,
+			&item.Description,
 			&item.CreatedAt,
 			&item.UpdatedAt,
 		)
@@ -111,6 +120,7 @@ func(r *ItemRepo)ItemUpdateRepo(ctx context.Context, tx pgx.Tx, input *model.Upd
 		SET name = COALESCE($1, name),
 			quantity = COALESCE($2, quantity),
 			price = COALESCE($3, price), 
+			description = COALESCE($4, description),
 			updated_at = $4
 		WHERE item_id = $5
 		RETURNING item_id, belongs_to, name, quantity, price, created_at, updated_at
@@ -120,6 +130,7 @@ func(r *ItemRepo)ItemUpdateRepo(ctx context.Context, tx pgx.Tx, input *model.Upd
 		input.Name,
 		input.Quantity,
 		input.Price,
+		input.Description,
 		input.UpdatedAt,
 		id,
 	).Scan(
@@ -128,6 +139,7 @@ func(r *ItemRepo)ItemUpdateRepo(ctx context.Context, tx pgx.Tx, input *model.Upd
 		&updatedItem.Name, 
 		&updatedItem.Quantity,
 		&updatedItem.Price,
+		&updatedItem.Description,
 		&updatedItem.CreatedAt,
 		&updatedItem.UpdatedAt,
 	)
