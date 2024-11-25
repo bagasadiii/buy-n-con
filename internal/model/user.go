@@ -1,7 +1,9 @@
 package model
 
 import (
+	"errors"
 	"time"
+	"unicode"
 
 	"github.com/bagasadiii/buy-n-con/helper"
 	"github.com/google/uuid"
@@ -36,6 +38,20 @@ type UserResponse struct {
 	UpdatedAt	time.Time	`json:"updated_at"`
 }
 func NewUser(input *RegisterInput)(*User, error){
+	for _, char := range input.Username {
+		if unicode.IsUpper(char) {
+			return nil, errors.New("username cannot contain uppercase")
+		}
+		
+		if unicode.IsSpace(char) {
+			return nil, errors.New("username cannot contain spaces")
+		}
+		
+		if !(unicode.IsLetter(char) || unicode.IsDigit(char) || char == '_') {
+			return nil, errors.New("username can only contain letters, digits, and underscores")
+		}
+	}
+
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
 	if err != nil {
 		helper.ErrMsg(err, "failed to hash password: ")

@@ -3,6 +3,7 @@ package model
 import (
 	"context"
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/bagasadiii/buy-n-con/helper"
@@ -47,6 +48,7 @@ type ItemResp struct {
 }
 
 func NewItem(ctx context.Context, input *CreateItemInput)(*Item, error){
+	name := strings.TrimSpace(input.Name)
 	ctxKey, ok := ctx.Value(middleware.UserContextKey).(*middleware.ContextKey)
 	if !ok {
 		helper.ErrMsg(nil, "failed to get context key: ")
@@ -60,7 +62,7 @@ func NewItem(ctx context.Context, input *CreateItemInput)(*Item, error){
 		ItemID: uuid.New(),
 		UserID: ctxKey.UserIDKey,
 		BelongsTo: ctxKey.UsernameKey,
-		Name: input.Name,
+		Name: name,
 		Quantity: input.Quantity,
 		Price: input.Price,
 		CreatedAt: time.Now(),
