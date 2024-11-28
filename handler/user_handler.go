@@ -13,7 +13,7 @@ import (
 )
 
 type UserHandlerImpl interface {
-	Register(w http.ResponseWriter, r *http.Request, _ router.Params)
+	Register(w http.ResponseWriter, r *http.Request, p router.Params)
 	Login(w http.ResponseWriter, r *http.Request, _ router.Params)
 	GetUserByUsername(w http.ResponseWriter, r *http.Request, p router.Params)
 }
@@ -28,7 +28,7 @@ func NewUserHandler(serv service.UserServiceImpl)UserHandlerImpl{
 	}
 }
 
-func(h *UserHandler)Register(w http.ResponseWriter, r *http.Request, _ router.Params){
+func(h *UserHandler)Register(w http.ResponseWriter, r *http.Request, p router.Params){
 	var input model.RegisterInput
 	err := json.NewDecoder(r.Body).Decode(&input)
 	if err != nil {

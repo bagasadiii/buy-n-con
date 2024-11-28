@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/bagasadiii/buy-n-con/helper"
 	"github.com/bagasadiii/buy-n-con/internal/middleware"
@@ -81,7 +82,7 @@ func(h *ItemHandler)GetItemByID(w http.ResponseWriter, r *http.Request, p router
 	}
 	input := &model.GetItemInput{
 		ItemID: itemID,
-		BelongsTo: username,
+		Owner: username,
 	}
 	item, err := h.serv.GetItemByIDService(r.Context(), input)
 	if err != nil {
@@ -99,7 +100,25 @@ func(h *ItemHandler)GetItemByID(w http.ResponseWriter, r *http.Request, p router
 }
 func(h *ItemHandler)GetAllItems(w http.ResponseWriter, r *http.Request, p router.Params){
 	username := p.ByName("username")
-	items, err := h.serv.GetAllItemsService(r.Context(), username)
+	if username == "" {
+		res := helper.BadRequestErr("Username is required ", nil)
+		helper.JSONResponse(w, res.Status, nil)
+	}
+	queryParams := r.URL.Query()
+	limit, err := strconv.Atoi(queryParams.Get("limit"))
+	if err != nil || limit <= 0 {
+		limit = 10
+	}
+	offset, err := strconv.Atoi(queryParams.Get("offset"))
+	if err != nil || offset < 0 {
+		offset = 0
+	}
+	pageReq := &model.ItemsPageReq{
+		Username: username,
+		Limit:    limit,
+		Offset:   offset,
+	}
+	items, err := h.serv.GetAllItemsService(r.Context(), pageReq)
 	if err != nil {
 		res := helper.BadRequestErr("Bad request: unable to fetch items", nil)
 		helper.JSONResponse(w, res.Status, res)
@@ -108,7 +127,7 @@ func(h *ItemHandler)GetAllItems(w http.ResponseWriter, r *http.Request, p router
 	res := helper.Response{
 		Status: http.StatusOK,
 		Message: "Items fetched",
-		Data: &items,
+		Data: items,
 		Err: nil,
 	}
 	helper.JSONResponse(w, res.Status, res)
@@ -141,7 +160,7 @@ func(h *ItemHandler)UpdateItem(w http.ResponseWriter, r *http.Request, p router.
 	}
 	getItem := model.GetItemInput{
 		ItemID: itemID,
-		BelongsTo: username,
+		Owner: username,
 	}
 	updatedItem, err := h.serv.UpdateItemService(ctx, &input, &getItem)
 	if err != nil {

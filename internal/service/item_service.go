@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/bagasadiii/buy-n-con/helper"
@@ -14,7 +15,7 @@ import (
 type ItemServiceImpl interface {
 	CreateItemService(ctx context.Context, new *model.CreateItemInput)(*model.Item, error)
 	GetItemByIDService(ctx context.Context, input *model.GetItemInput)(*model.ItemResp, error)
-	GetAllItemsService(ctx context.Context, username string)([]model.ItemResp, error)
+	GetAllItemsService(ctx context.Context, page *model.ItemsPageReq)(*model.ItemsPageRes, error)
 	UpdateItemService(ctx context.Context, new *model.UpdateItemInput, getItem *model.GetItemInput)(*model.ItemResp, error)
 	DeleteItemService(ctx context.Context, id *uuid.UUID)error
 }
@@ -60,19 +61,29 @@ func(s *ItemService)GetItemByIDService(ctx context.Context, input *model.GetItem
 	}
 	return item, nil
 }
-func(s *ItemService)GetAllItemsService(ctx context.Context, username string)([]model.ItemResp, error){
+func(s *ItemService)GetAllItemsService(ctx context.Context, page *model.ItemsPageReq)(*model.ItemsPageRes, error){
 	tx, err := s.db.Begin(ctx)
 	if err != nil {
 		helper.ErrMsg(err, "failed to begin transaction: ")
 		return nil, err
 	}
 	defer helper.CommitOrRollback(ctx, tx)
-	items, err := s.repo.GetAllItemsRepo(ctx ,tx ,username)
+
+	if page.Username == "" {
+		return nil, errors.New("invalid username")
+	}
+	if page.Limit <= 0 {
+		page.Limit = 10
+	}
+	if page.Offset < 0 {
+		page.Offset = 0
+	}
+	res, err := s.repo.GetAllItemsRepo(ctx, tx, page)
 	if err != nil {
-		helper.ErrMsg(err, "failed to begin fetch items: ")
+		helper.ErrMsg(err, "failed to get itemtransaction: ")
 		return nil, err
 	}
-	return items, nil
+	return res, nil
 }
 func(s *ItemService)UpdateItemService(ctx context.Context, new *model.UpdateItemInput, getItem *model.GetItemInput)(*model.ItemResp, error){
 	tx, err := s.db.Begin(ctx)

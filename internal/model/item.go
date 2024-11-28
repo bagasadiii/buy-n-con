@@ -12,26 +12,26 @@ import (
 )
 
 type Item struct {
-	ItemID    	uuid.UUID `json:"item_id"`
-	UserID    	uuid.UUID `json:"user_id"`
-	BelongsTo 	string	`json:"belongs_to"`
-	Name      	string    `json:"name"`
-	Quantity  	int       `json:"quantity"`
-	Price     	int       `json:"price"`
-	Description	string		`json:"description"`
-	CreatedAt 	time.Time `json:"created_at"`
-	UpdatedAt 	time.Time `json:"updated_at"`
+	ItemID    		uuid.UUID		`json:"item_id"`
+	UserID    		uuid.UUID		`json:"user_id"`
+	Owner	 		string			`json:"owner"`
+	Name      		string			`json:"name"`
+	Quantity  		int				`json:"quantity"`
+	Price     		int				`json:"price"`
+	Description		string			`json:"description"`
+	CreatedAt 		time.Time		`json:"created_at"`
+	UpdatedAt 		time.Time		`json:"updated_at"`
 }
 type CreateItemInput struct {
-	ItemID   	uuid.UUID	`json:"item_id"`
-	Name      	string		`json:"name" validate:"required"`
-	Quantity  	int			`json:"quantity" validate:"required,gt=0"`
-	Price     	int			`json:"price" validate:"required,gt=0"`
-	Description	string		`json:"description"`
+	ItemID			uuid.UUID		`json:"item_id"`
+	Name      		string			`json:"name" validate:"required"`
+	Quantity  		int				`json:"quantity" validate:"required,gt=0"`
+	Price     		int				`json:"price" validate:"required,gt=0"`
+	Description		string			`json:"description"`
 }
 type GetItemInput struct {
-	ItemID		uuid.UUID	`json:"item_id"`
-	BelongsTo	string		`json:"belongs_to"`
+	ItemID			uuid.UUID		`json:"item_id"`
+	Owner			string			`json:"owner"`
 }
 type UpdateItemInput struct {
 	Name      string    `json:"name" validate:"required,min=3"`
@@ -39,11 +39,10 @@ type UpdateItemInput struct {
 	Price     int       `json:"price" validate:"required,gt=0"`
 	UpdatedAt time.Time `json:"updated_at"`
 	Description	string	`json:"description"`
-
 }
 type ItemResp struct {
 	ItemID    uuid.UUID `json:"item_id"`
-	BelongsTo string	`json:"belongs_to"`
+	Owner	string	`json:"owner"`
 	Name      string    `json:"name"`
 	Quantity  int       `json:"quantity"`
 	Price     int       `json:"price"`
@@ -51,7 +50,18 @@ type ItemResp struct {
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }
-
+type ItemsPageReq struct {
+	Username	string	`json:"username"`
+	Limit		int		`json:"limit"`
+	Offset		int		`json:"offset"`
+}
+type ItemsPageRes struct {
+	Items		[]ItemResp			`json:"items"`
+	TotalItems	int					`json:"total_items"`
+	TotalPages 	int					`json:"total_pages"`
+	Current		int					`json:"current"`
+	PageSize	int					`json:"page_size"`
+}
 func NewItem(ctx context.Context, input *CreateItemInput)(*Item, error){
 	name := strings.TrimSpace(input.Name)
 	ctxKey, ok := ctx.Value(middleware.UserContextKey).(*middleware.ContextKey)
@@ -66,7 +76,7 @@ func NewItem(ctx context.Context, input *CreateItemInput)(*Item, error){
 	return &Item{
 		ItemID: uuid.New(),
 		UserID: ctxKey.UserIDKey,
-		BelongsTo: ctxKey.UsernameKey,
+		Owner: ctxKey.UsernameKey,
 		Name: name,
 		Quantity: input.Quantity,
 		Price: input.Price,

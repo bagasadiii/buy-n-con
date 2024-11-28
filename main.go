@@ -18,6 +18,8 @@ func main() {
 		log.Fatal("failed to get .env file: ", err)
 	}
 	db := config.DBConnection()
+	defer db.Close()
+
 	userRepo := repository.NewUserRepository(db)
 	userServ := service.NewUserService(userRepo)
 	userHand := handler.NewUserHandler(userServ)
