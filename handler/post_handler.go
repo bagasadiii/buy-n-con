@@ -2,7 +2,6 @@ package handler
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 	"strconv"
 
@@ -10,30 +9,29 @@ import (
 	"github.com/bagasadiii/buy-n-con/internal/middleware"
 	"github.com/bagasadiii/buy-n-con/internal/model"
 	"github.com/bagasadiii/buy-n-con/internal/service"
-	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 	router "github.com/julienschmidt/httprouter"
 )
 
-type ItemHandlerImpl interface{
-	CreateItem(w http.ResponseWriter, r *http.Request, p router.Params)
-	GetItemByID(w http.ResponseWriter, r *http.Request, p router.Params)
-	GetAllItems(w http.ResponseWriter, r *http.Request, p router.Params)
-	UpdateItem(w http.ResponseWriter, r *http.Request, p router.Params)
-	DeleteItem(w http.ResponseWriter, r *http.Request, p router.Params)
+type PostHandlerImpl interface{
+	CreatePost(w http.ResponseWriter, r *http.Request, p router.Params)
+	GetPostByID(w http.ResponseWriter, r *http.Request, p router.Params)
+	GetAllPosts(w http.ResponseWriter, r *http.Request, p router.Params)
+	UpdatePost(w http.ResponseWriter, r *http.Request, p router.Params)
+	DeletePost(w http.ResponseWriter, r *http.Request, p router.Params)
 }
-type ItemHandler struct {
-	serv service.ItemServiceImpl
-	valid *validator.Validate
+
+type PostHandler struct {
+	serv service.PostServiceImpl
 }
-func NewItemHandler(serv service.ItemServiceImpl)ItemHandlerImpl{
-	return &ItemHandler{
-		serv:serv,
-		valid: validator.New(),
+
+func NewPostHandler(serv service.PostServiceImpl)PostHandlerImpl{
+	return &PostHandler{
+		serv: serv,
 	}
 }
 
-func(h *ItemHandler)CreateItem(w http.ResponseWriter, r *http.Request, p router.Params){
+func(h *PostHandler)CreatePost(w http.ResponseWriter, r *http.Request, p router.Params){
 	ctx := r.Context()
 	userCtx, ok := ctx.Value(middleware.UserContextKey).(*middleware.ContextKey)
 	if !ok {
@@ -47,58 +45,53 @@ func(h *ItemHandler)CreateItem(w http.ResponseWriter, r *http.Request, p router.
 		helper.JSONResponse(w, res.Status, res)
 		return
 	}
-	var input model.CreateItemInput
+	var input model.PostInput
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		res := helper.BadRequestErr("Bad request: validation failed", err)
+		res := helper.InternalErr("Internal error: ", err)
 		helper.JSONResponse(w, res.Status, res)
 		return
 	}
-	if err := h.valid.Struct(&input); err != nil {
-		res := helper.BadRequestErr("Bad request", err)
-		helper.JSONResponse(w, res.Status, res)
-		return
-	}
-	item, err := h.serv.CreateItemService(ctx, &input)
+	post, err := h.serv.CreatePostService(ctx, &input)
 	if err != nil {
-		res := helper.InternalErr("Failed to create item: ", err)
+		res := helper.InternalErr("Failed to create post: ", err)
 		helper.JSONResponse(w, res.Status, res)
 		return
 	}
 	res := helper.Response{
 		Status: http.StatusCreated,
-		Message: "item created",
-		Data: &item,
+		Message: "post created",
+		Data: &post,
 		Err: nil,
 	}
 	helper.JSONResponse(w, res.Status, res)
 }
-func(h *ItemHandler)GetItemByID(w http.ResponseWriter, r *http.Request, p router.Params){
+func(h *PostHandler)GetPostByID(w http.ResponseWriter, r *http.Request, p router.Params){
 	username := p.ByName("username")
-	itemID, err := uuid.Parse(p.ByName("item_id"))
+	postID, err := uuid.Parse(p.ByName("post_id"))
 	if err != nil {
-		res := helper.BadRequestErr("Bad request: Invalid item ID", nil)
+		res := helper.BadRequestErr("Bad request: Invalid post ID", nil)
 		helper.JSONResponse(w, res.Status, res)
 		return
 	}
-	input := &model.GetItemInput{
-		ItemID: itemID,
+	input := &model.GetPostInput{
+		PostID: postID,
 		Owner: username,
 	}
-	item, err := h.serv.GetItemByIDService(r.Context(), input)
+	post, err := h.serv.GetPostByIDService(r.Context(), input)
 	if err != nil {
-		res := helper.InternalErr("Failed to fetch item: ", err)
+		res := helper.InternalErr("Failed to fetch post: ", err)
 		helper.JSONResponse(w, res.Status, res)
 		return
 	}
 	res := helper.Response{
 		Status: http.StatusOK,
 		Message: "OK",
-		Data: &item,
+		Data: &post,
 		Err: nil,
 	}
 	helper.JSONResponse(w, res.Status, res)
 }
-func(h *ItemHandler)GetAllItems(w http.ResponseWriter, r *http.Request, p router.Params){
+func(h *PostHandler)GetAllPosts(w http.ResponseWriter, r *http.Request, p router.Params){
 	username := p.ByName("username")
 	if username == "" {
 		res := helper.BadRequestErr("Username is required ", nil)
@@ -114,26 +107,26 @@ func(h *ItemHandler)GetAllItems(w http.ResponseWriter, r *http.Request, p router
 	if err != nil || offset < 0 {
 		offset = 0
 	}
-	pageReq := &model.ItemsPageReq{
+	pageReq := &model.PostsPageReq{
 		Username: username,
 		Limit:    limit,
 		Offset:   offset,
 	}
-	items, err := h.serv.GetAllItemsService(r.Context(), pageReq)
+	posts, err := h.serv.GetAllPostService(r.Context(), pageReq)
 	if err != nil {
-		res := helper.BadRequestErr("Bad request: unable to fetch items", nil)
+		res := helper.InternalErr("Bad request: unable to fetch posts", nil)
 		helper.JSONResponse(w, res.Status, res)
 		return
 	}
 	res := helper.Response{
 		Status: http.StatusOK,
-		Message: "Items fetched",
-		Data: items,
+		Message: "posts fetched",
+		Data: posts,
 		Err: nil,
 	}
 	helper.JSONResponse(w, res.Status, res)
 }
-func(h *ItemHandler)UpdateItem(w http.ResponseWriter, r *http.Request, p router.Params){
+func(h *PostHandler)UpdatePost(w http.ResponseWriter, r *http.Request, p router.Params){
 	ctx := r.Context()
 	userCtx, ok := ctx.Value(middleware.UserContextKey).(*middleware.ContextKey)
 	if !ok {
@@ -141,9 +134,9 @@ func(h *ItemHandler)UpdateItem(w http.ResponseWriter, r *http.Request, p router.
 		helper.JSONResponse(w, res.Status, res)
 		return
 	}
-	itemID, err := uuid.Parse(p.ByName("item_id"))
+	postID, err := uuid.Parse(p.ByName("post_id"))
 	if err != nil {
-		res := helper.BadRequestErr("Invalid ID: item ID parsing failed", err)
+		res := helper.BadRequestErr("Invalid ID: post ID parsing failed", err)
 		helper.JSONResponse(w, res.Status, res)
 		return
 	}
@@ -153,23 +146,22 @@ func(h *ItemHandler)UpdateItem(w http.ResponseWriter, r *http.Request, p router.
 		helper.JSONResponse(w, res.Status, res)
 		return
 	}
-	var input model.UpdateItemInput
+	var input model.UpdatePostInput
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 		res := helper.BadRequestErr("Bad request: ", err)
 		helper.JSONResponse(w, res.Status, res)
 		return
 	}
-	getItem := model.GetItemInput{
-		ItemID: itemID,
+	getPost := model.GetPostInput{
+		PostID: postID,
 		Owner: username,
 	}
-	updatedItem, err := h.serv.UpdateItemService(ctx, &input, &getItem)
+	updatedPost, err := h.serv.UpdatePostService(ctx, &input, &getPost)
 	if err != nil {
-		log.Println(itemID)
 		res := helper.Response{
 			Status: http.StatusInternalServerError,
 			Message: "invalid id",
-			Data: updatedItem,
+			Data: &updatedPost,
 			Err: err.Error(),
 		}
 		helper.JSONResponse(w, res.Status, res)
@@ -177,13 +169,13 @@ func(h *ItemHandler)UpdateItem(w http.ResponseWriter, r *http.Request, p router.
 	}
 	res := helper.Response{
 		Status: http.StatusOK,
-		Message: "Item updated",
-		Data: &updatedItem,
+		Message: "post updated",
+		Data: &updatedPost,
 		Err: nil,
 	}
 	helper.JSONResponse(w, res.Status, res)
 }
-func(h *ItemHandler)DeleteItem(w http.ResponseWriter, r *http.Request, p router.Params) { 
+func(h *PostHandler)DeletePost(w http.ResponseWriter, r *http.Request, p router.Params) { 
     ctx := r.Context()
     userCtx, ok := ctx.Value(middleware.UserContextKey).(*middleware.ContextKey)
     if !ok {
@@ -192,7 +184,7 @@ func(h *ItemHandler)DeleteItem(w http.ResponseWriter, r *http.Request, p router.
         return
     }
 
-    itemID, err := uuid.Parse(p.ByName("item_id"))
+    postID, err := uuid.Parse(p.ByName("post_id"))
     if err != nil {
         res := helper.BadRequestErr("Invalid ID: ", err)
         helper.JSONResponse(w, res.Status, res)
@@ -204,16 +196,20 @@ func(h *ItemHandler)DeleteItem(w http.ResponseWriter, r *http.Request, p router.
         helper.JSONResponse(w, res.Status, res)
         return
     }
-    err = h.serv.DeleteItemService(ctx, &itemID)
+	input := model.GetPostInput{
+		PostID: postID,
+		Owner: username,
+	}
+    err = h.serv.DeletePostService(ctx, &input)
     if err != nil {
-        res := helper.InternalErr("Failed to delete item: ", err)
+        res := helper.InternalErr("Failed to delete post: ", err)
         helper.JSONResponse(w, res.Status, res)
         return
     }
 
     res := helper.Response{
         Status:  http.StatusOK,
-        Message: "Item deleted successfully",
+        Message: "post deleted successfully",
         Data:    nil,
         Err:     nil,
     }

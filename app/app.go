@@ -1,35 +1,32 @@
 package app
 
 import (
-	"net/http"
-
 	"github.com/bagasadiii/buy-n-con/handler"
-	"github.com/bagasadiii/buy-n-con/internal/middleware"
+	mw "github.com/bagasadiii/buy-n-con/internal/middleware"
 	router "github.com/julienschmidt/httprouter"
 )
-
-func SetupRouter(item handler.ItemHandlerImpl, user handler.UserHandlerImpl)*router.Router{
+type Routes struct {
+	User handler.UserHandlerImpl
+	Item handler.ItemHandlerImpl
+	Post handler.PostHandlerImpl
+}
+func SetupRouter(route *Routes)*router.Router{
 	r := router.New()
 
-	r.GlobalOPTIONS = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-        w.Header().Set("Access-Control-Allow-Origin", "http://localhost:5173")
-        w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-        w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
-        if r.Method == http.MethodOptions {
-            w.WriteHeader(http.StatusOK)
-            return
-        }
-    })
+	r.POST("/api/register", route.User.Register)
+	r.POST("/api/login", route.User.Login)
+	r.GET("/api/u/:username", route.User.GetUserByUsername)
 
-	r.POST("/api/register", user.Register)
-	r.POST("/api/login", user.Login)
-	r.GET("/api/u/:username", user.GetUserByUsername)
+	r.POST("/api/u/:username/items", mw.Auth(route.Item.CreateItem))
+	r.GET("/api/u/:username/items/:item_id", route.Item.GetItemByID)
+	r.GET("/api/u/:username/items", route.Item.GetAllItems)
+	r.PATCH("/api/u/:username/items/:item_id", mw.Auth(route.Item.UpdateItem))
+	r.DELETE("/api/u/:username/items/:item_id", mw.Auth(route.Item.DeleteItem))
 
-	r.POST("/api/u/:username/items", middleware.Auth(item.CreateItem))
-	r.GET("/api/u/:username/items/:item_id", item.GetItemByID)
-	r.GET("/api/u/:username/items", item.GetAllItems)
-	r.PATCH("/api/u/:username/items/:item_id", middleware.Auth(item.UpdateItem))
-	r.DELETE("/api/u/:username/items/:item_id", middleware.Auth(item.DeleteItem))
-
+	r.POST("/api/u/:username/post", mw.Auth(route.Post.CreatePost))
+	r.GET("/api/u/:username/post/:post_id", route.Post.GetPostByID)
+	r.GET("/api/u/:username/post", route.Post.GetAllPosts)
+	r.PATCH("/api/u/:username/post/:post_id", mw.Auth(route.Post.UpdatePost))
+	r.DELETE("/api/u/:username/post/:post_id", mw.Auth(route.Post.DeletePost))
 	return r
 }

@@ -56,7 +56,7 @@ func(h *UserHandler)Register(w http.ResponseWriter, r *http.Request, p router.Pa
 	helper.JSONResponse(w, res.Status, res)
 }
 
-func(h *UserHandler)Login(w http.ResponseWriter, r *http.Request, _ router.Params){
+func(h *UserHandler)Login(w http.ResponseWriter, r *http.Request, p router.Params){
 	var input model.LoginInput
 	err := json.NewDecoder(r.Body).Decode(&input)
 	if err != nil {

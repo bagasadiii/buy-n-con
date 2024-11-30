@@ -10,6 +10,7 @@ import (
 	"github.com/bagasadiii/buy-n-con/internal/repository"
 	"github.com/bagasadiii/buy-n-con/internal/service"
 	"github.com/joho/godotenv"
+	"github.com/rs/cors"
 )
 
 func main() {
@@ -28,9 +29,26 @@ func main() {
 	itemServ := service.NewItemService(itemRepo, db)
 	itemHand := handler.NewItemHandler(itemServ)
 
-	r := app.SetupRouter(itemHand, userHand)
-	if err := http.ListenAndServe(":8080", r); err != nil {
-		log.Fatal("failed to run server")
+	postRepo := repository.NewPostRepository()
+	postServ := service.NewServiceImpl(postRepo, db)
+	postHand := handler.NewPostHandler(postServ)
+
+	route := app.Routes{
+		User: userHand,
+		Item: itemHand,
+		Post: postHand,
+	}
+
+	r := app.SetupRouter(&route)
+
+	c := cors.New(cors.Options{
+		AllowedOrigins: []string{"http://localhost:5173"},
+		AllowCredentials: true,
+		Debug: true,
+	})
+
+	if err := http.ListenAndServe(":8080", c.Handler(r)); err != nil {
+		log.Fatalf("failed to run server: %v\n", err)
 	}
 	log.Println("server running")
 }
