@@ -34,7 +34,7 @@ This documentation provides an overview of the API endpoints for the **Buy-n-Con
 
 ## Base URL
 The API base URL is:  
-`http://<host>:<port>/`
+`http://localhost:8080/`
 
 ## Authentication
 Some routes require authentication. Use the `Authorization` header with the format `Bearer <token>`.
