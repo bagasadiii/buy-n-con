@@ -2,26 +2,39 @@ package config
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 func DBConnection() *pgxpool.Pool {
-	dburl := os.Getenv("DBURL")
-	if dburl == "" {
-		log.Fatal("DBURL is not set in environment variables")
+	dbHost := os.Getenv("DBHOST")
+	dbUser := os.Getenv("DBUSER")
+	dbPass := os.Getenv("DBPASS")
+	dbPort := os.Getenv("DBPORT")
+	dbName := os.Getenv("DBNAME")
+
+	dbURL := fmt.Sprintf("postgres://%s:%s@%s:%s/%s", dbUser, dbPass, dbHost, dbPort, dbName)
+
+	if dbURL == "" {
+		log.Fatal("Database URL is not set correctly")
 	}
 
-	pool, err := pgxpool.New(context.Background(), dburl)
-	if err != nil {
-		log.Fatal("failed to create connection pool: ", err)
-	}
-
-	if err := pool.Ping(context.Background()); err != nil {
-		log.Fatal("failed to ping database: ", err)
-	}
+	var pool *pgxpool.Pool
+	var err error
+	for i := 0; i < 5; i++ {
+        pool, err = pgxpool.New(context.Background(), dbURL)
+        if err == nil {
+            if err = pool.Ping(context.Background()); err == nil {
+                break
+            }
+        }
+        log.Printf("Retrying database connection... (%d/5)\n", i)
+        time.Sleep(2 * time.Second)
+    }
 
 	tableQuery, err := os.ReadFile("create_table.sql")
 	if err != nil {

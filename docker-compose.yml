@@ -1,0 +1,31 @@
+services:
+  buy-n-con:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      - DBHOST=pgxpostgres
+      - DBUSER=bagasadi
+      - DBPASS=bagas1931
+      - DBPORT=5432
+      - DBNAME=buyncon
+    depends_on:
+      - pgxpostgres
+    networks:
+      - app-network
+    
+  pgxpostgres:
+    container_name: pgxpostgres
+    image: postgres
+    environment:
+      - POSTGRES_USER=bagasadi
+      - POSTGRES_PASSWORD=bagas1931
+      - POSTGRES_DB=buyncon
+    ports:
+      - "5432:5432"
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
