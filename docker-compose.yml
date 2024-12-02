@@ -1,6 +1,7 @@
 services:
   buy-n-con:
     build: .
+    image: buyncon
     ports:
       - "8080:8080"
     environment:

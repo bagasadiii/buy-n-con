@@ -106,6 +106,9 @@ func(s *ItemService)UpdateItemService(ctx context.Context, new *model.UpdateItem
 	if new.Quantity == 0 {
 		new.Quantity = existingItem.Quantity
 	}
+	if new.Description == ""{
+		new.Description = existingItem.Description
+	}
 	updateItem := model.UpdateItemInput{
 		Name: new.Name,
 		Quantity: new.Quantity,
